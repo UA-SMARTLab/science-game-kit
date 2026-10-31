@@ -81,10 +81,35 @@ def render(exe, sheet, code, png, tmp):
         sys.exit(f"{png.name}: the browser saved no image. Check that {sheet} opens in a browser.")
 
 
+FAN = ["methodical-MTH-D08", "major-revisions-MR-R17", "red-flag-RF-F13"]  # one card per game, for READMEs
+
+
+def fan(exe, tmp):
+    """assets/kit-fan.png: one card from each game, fanned, on a transparent background."""
+    imgs = "".join(f'<img src="{(OUT / f"{n}.png").as_uri()}" style="--r:{r}deg;--x:{x}px">'
+                   for n, r, x in zip(FAN, (-14, 0, 14), (-150, 0, 150)))
+    page = Path(tmp) / "fan.html"
+    page.write_text('<!doctype html><style>html,body{margin:0;background:transparent}'
+                    'img{position:absolute;left:50%;top:30px;width:230px;margin-left:-115px;border-radius:12px;'
+                    'transform:translateX(var(--x)) rotate(var(--r));box-shadow:0 6px 16px rgba(0,0,0,.25)}</style>'
+                    + imgs, encoding="utf-8")
+    png = ROOT / "assets" / "kit-fan.png"
+    png.unlink(missing_ok=True)
+    subprocess.run([exe, "--headless=new", "--disable-gpu", "--no-first-run", "--hide-scrollbars",
+                    "--allow-file-access-from-files", f"--user-data-dir={Path(tmp) / 'profile'}", "--window-size=660,400",
+                    "--default-background-color=00000000", "--virtual-time-budget=5000", f"--screenshot={png}", page.as_uri()],
+                   capture_output=True, timeout=120)
+    print("saved", png.relative_to(ROOT))
+
+
 def main(folders):
     if not folders:
         sys.exit(__doc__)
     exe = browser()
+    if folders == ["--fan"]:
+        with tempfile.TemporaryDirectory() as tmp:
+            fan(exe, tmp)
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         for folder in (Path(f).resolve() for f in folders):

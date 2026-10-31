@@ -11,11 +11,7 @@ of a study. All are free to play in the browser, or to print and cut for a class
 | 2 | [Major Revisions](https://github.com/UA-SMARTLab/major-revisions-card-game) | review the manuscript: find the flaw planted in it with the right reviewer requests | reporting guidelines and the flaws they catch | [Play](https://ua-smartlab.github.io/major-revisions-card-game/app/) |
 | 3 | [Red Flag](https://github.com/UA-SMARTLab/red-flag-card-game) | judge the claim: flag its reasoning error, or call it sound | confounding, sampling, statistical and publication errors | [Play](https://ua-smartlab.github.io/red-flag-card-game/app/) |
 
-<p>
-<img src="assets/cards/methodical-MTH-D08.png" alt="Methodical: the Method card 'Case–control study'" width="180">
-<img src="assets/cards/major-revisions-MR-R17.png" alt="Major Revisions: the Request card 'Missing data'" width="180">
-<img src="assets/cards/red-flag-RF-F13.png" alt="Red Flag: the Flag card 'Simpson's paradox'" width="180">
-</p>
+![One card from each game: Methodical's 'Case–control study', Major Revisions' 'Missing data' request and Red Flag's 'Simpson's paradox'](assets/kit-fan.png)
 
 ## How this repository is built
 
@@ -29,7 +25,8 @@ from the game. After a game's cards change, rebuild that game, then with the gam
 python tools/card_images.py ../methodical-card-game ../major-revisions-card-game ../red-flag-card-game
 ```
 
-The cards shown are listed in `SHOWCASE` at the top of `tools/card_images.py`. The kit's shared conventions (card
+The cards shown are listed in `SHOWCASE` at the top of `tools/card_images.py`; `python tools/card_images.py --fan` then
+redraws `assets/kit-fan.png`, the picture used in READMEs. The kit's shared conventions (card
 look, app behaviour, content rules) are in [Methodical's CLAUDE.md](https://github.com/UA-SMARTLab/methodical-card-game/blob/main/CLAUDE.md).
 
 ## Licence
