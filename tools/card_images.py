@@ -7,6 +7,8 @@ card in the game. Run this after a game's cards change (and after that game's ow
 
 Each argument is a game's folder; the folder name picks its cards from SHOWCASE. Standard library only, plus a local
 Chrome or Edge in headless mode. The images go to assets/cards/<game>-<code>.png (520 x 727 px, transparent corners).
+For games marked in README_PICTURE, the same cards, fanned, also become the game's own README picture,
+<game>/print/preview.png. `python tools/card_images.py --fan` draws assets/kit-fan.png from the images already made.
 """
 import re
 import shutil
@@ -25,6 +27,8 @@ SHOWCASE = {
     "red-flag-card-game": ("red-flag", ["back", "RF-C17", "RF-F13", "RF-K06"]),
     "major-revisions-card-game": ("major-revisions", ["back", "MR-P04", "MR-R17", "MR-4A-F"]),
 }
+# Games whose README picture (print/preview.png) is drawn here; Methodical keeps its own hand-picked chain of cards.
+README_PICTURE = {"red-flag-card-game", "major-revisions-card-game"}
 
 W, H = 520, 727  # 63 x 88 mm at 520/63 px per mm
 
@@ -84,22 +88,27 @@ def render(exe, sheet, code, png, tmp):
 FAN = ["methodical-MTH-D08", "major-revisions-MR-R17", "red-flag-RF-F13"]  # one card per game, for READMEs
 
 
-def fan(exe, tmp):
-    """assets/kit-fan.png: one card from each game, fanned, on a transparent background."""
-    imgs = "".join(f'<img src="{(OUT / f"{n}.png").as_uri()}" style="--r:{r}deg;--x:{x}px">'
-                   for n, r, x in zip(FAN, (-14, 0, 14), (-150, 0, 150)))
+def fan(exe, tmp, names, png):
+    """A fan of the named card images (3 or 4) on a transparent background, saved as png."""
+    n = len(names)
+    angles = [(-14, 0, 14), (-15, -5, 5, 15)][n - 3]
+    shifts = [(-150, 0, 150), (-225, -75, 75, 225)][n - 3]
+    imgs = "".join(f'<img src="{(OUT / f"{name}.png").as_uri()}" style="--r:{r}deg;--x:{x}px">'
+                   for name, r, x in zip(names, angles, shifts))
     page = Path(tmp) / "fan.html"
     page.write_text('<!doctype html><style>html,body{margin:0;background:transparent}'
                     'img{position:absolute;left:50%;top:30px;width:230px;margin-left:-115px;border-radius:12px;'
                     'transform:translateX(var(--x)) rotate(var(--r));box-shadow:0 6px 16px rgba(0,0,0,.25)}</style>'
                     + imgs, encoding="utf-8")
-    png = ROOT / "assets" / "kit-fan.png"
     png.unlink(missing_ok=True)
     subprocess.run([exe, "--headless=new", "--disable-gpu", "--no-first-run", "--hide-scrollbars",
-                    "--allow-file-access-from-files", f"--user-data-dir={Path(tmp) / 'profile'}", "--window-size=660,400",
+                    "--allow-file-access-from-files", f"--user-data-dir={Path(tmp) / 'profile'}",
+                    f"--window-size={510 + 150 * (n - 2)},400",
                     "--default-background-color=00000000", "--virtual-time-budget=5000", f"--screenshot={png}", page.as_uri()],
                    capture_output=True, timeout=120)
-    print("saved", png.relative_to(ROOT))
+    if not png.exists():
+        sys.exit(f"{png.name}: the browser saved no image.")
+    print("saved", png)
 
 
 def main(folders):
@@ -108,7 +117,7 @@ def main(folders):
     exe = browser()
     if folders == ["--fan"]:
         with tempfile.TemporaryDirectory() as tmp:
-            fan(exe, tmp)
+            fan(exe, tmp, FAN, ROOT / "assets" / "kit-fan.png")
         return
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
@@ -124,6 +133,9 @@ def main(folders):
                 png.unlink(missing_ok=True)
                 render(exe, sheet, code, png, tmp)
                 print("saved", png.relative_to(ROOT))
+            if folder.name in README_PICTURE:
+                names = [f"{slug}-{re.sub(r'[^A-Za-z0-9-]', '', c)}" for c in codes]
+                fan(exe, tmp, names, folder / "print" / "preview.png")
 
 
 if __name__ == "__main__":
