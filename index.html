@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Game Kit</title>
+<meta name="description" content="Card games that help researchers refresh their research-methods knowledge: Methodical, Major Revisions and Red Flag. Free to play in the browser, or print and cut.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='14' height='20' rx='2' fill='%232340A8' transform='rotate(-14 10 16)'/%3E%3Crect x='9' y='5' width='14' height='20' rx='2' fill='%239A3412'/%3E%3Crect x='15' y='6' width='14' height='20' rx='2' fill='%23B42318' transform='rotate(14 22 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* The kit's front door. Same tokens, fonts and paper grid as the games; each game's tile takes that game's accent. */
+:root {
+  --bg: #F4F3EF; --grid: rgba(64, 64, 44, .06); --surface: #FFFFFF; --ink: #1A1A17; --muted: #5C5C55; --line: #DCDAD2;
+  --methodical: #2340A8; --major-revisions: #9A3412; --red-flag: #B42318; --on-accent: #FFFFFF;
+  --shadow: 0 1px 2px rgba(26,26,23,.08), 0 10px 28px rgba(26,26,23,.09);
+  --f-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12130F; --grid: rgba(230, 230, 200, .045); --surface: #1C1D18; --ink: #ECEBE4; --muted: #A9A89E; --line: #34352D;
+  --methodical: #8AA6FF; --major-revisions: #FDBA74; --red-flag: #FF8A7A; --on-accent: #12130F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12130F; --grid: rgba(230, 230, 200, .045); --surface: #1C1D18; --ink: #ECEBE4; --muted: #A9A89E; --line: #34352D;
+  --methodical: #8AA6FF; --major-revisions: #FDBA74; --red-flag: #FF8A7A; --on-accent: #12130F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background-color: var(--bg); color: var(--ink); font: 16px/1.55 var(--f-body);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+.label { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* header */
+header { display: grid; gap: 10px; margin-bottom: 36px; max-width: 70ch; }
+h1 { font-size: clamp(40px, 8vw, 76px); font-weight: 800; letter-spacing: -.03em; line-height: .92; }
+.lede { font-size: clamp(17px, 2.2vw, 20px); margin: 6px 0 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 10px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 15px; }
+.facts li::before { content: "✓ "; color: var(--ink); font-weight: 600; }
+
+/* the three games, in the order a study meets them: plan it, review it, read it */
+.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; margin: 0; padding: 0; list-style: none; counter-reset: stage; }
+.game { --accent: var(--ink); position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
+  border-top: 6px solid var(--accent); border-radius: 14px; box-shadow: var(--shadow); padding: 18px 20px 20px; }
+.game[data-game="methodical"] { --accent: var(--methodical); }
+.game[data-game="major-revisions"] { --accent: var(--major-revisions); }
+.game[data-game="red-flag"] { --accent: var(--red-flag); }
+.stage { color: var(--accent); font-weight: 600; }
+.stage::before { counter-increment: stage; content: counter(stage) " · "; }
+
+/* a fan of the game's own cards, rendered from its print sheet by tools/card_images.py */
+.fan { position: relative; height: 230px; margin: 10px 0 14px; }
+.fan img { position: absolute; left: 50%; bottom: 6px; width: 132px; height: auto; aspect-ratio: 520 / 727; border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.18), 0 8px 18px rgba(0,0,0,.16); transform-origin: 50% 120%;
+  transform: translateX(-50%) rotate(var(--r)) translateX(var(--x)); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.fan img:nth-child(1) { --r: -15deg; --x: -26px; }
+.fan img:nth-child(2) { --r: -5deg; --x: -9px; }
+.fan img:nth-child(3) { --r: 5deg; --x: 9px; }
+.fan img:nth-child(4) { --r: 15deg; --x: 26px; }
+.game:hover .fan img:nth-child(1), .game:focus-within .fan img:nth-child(1) { --r: -22deg; --x: -40px; }
+.game:hover .fan img:nth-child(2), .game:focus-within .fan img:nth-child(2) { --r: -8deg; --x: -14px; }
+.game:hover .fan img:nth-child(3), .game:focus-within .fan img:nth-child(3) { --r: 8deg; --x: 14px; }
+.game:hover .fan img:nth-child(4), .game:focus-within .fan img:nth-child(4) { --r: 22deg; --x: 40px; }
+
+.game h2 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.game p { margin: 8px 0 0; }
+.practise { color: var(--muted); font-size: 15px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.meta li { font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: auto; padding-top: 18px; }
+.play { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 10px; background: var(--accent);
+  color: var(--on-accent); font-weight: 600; text-decoration: none; }
+.play:hover { filter: brightness(1.08); }
+.play svg { width: 16px; height: 16px; }
+.more { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
+.more a { color: var(--muted); text-underline-offset: 3px; display: inline-block; padding: 4px 0; }
+.more a:hover { color: var(--ink); }
+
+/* how the kit works */
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px 28px; margin: 48px 0 0; padding: 24px 0 0; border-top: 1px solid var(--line); }
+.how h3 { font-size: 18px; margin-bottom: 4px; }
+.how p { margin: 0; color: var(--muted); font-size: 15px; }
+footer { margin-top: 48px; color: var(--muted); font-size: 14px; display: grid; gap: 6px; }
+footer a { color: var(--ink); }
+
+@media (max-width: 400px) {
+  .fan { height: 200px; }
+  .fan img { width: 112px; }
+}
+@media (prefers-reduced-motion: reduce) { .fan img { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="label">SMART-Lab · University of Antwerp</span>
+    <h1>Science Game Kit</h1>
+    <p class="lede">Card games that help researchers refresh their research-methods knowledge. Each game takes one moment in the
+      life of a study: choosing how to answer a question, reviewing a manuscript, and judging a published claim.</p>
+    <ul class="facts">
+      <li>Free to play in the browser</li>
+      <li>Print and cut for a class or a lab meeting</li>
+      <li>Every key concept links to its source</li>
+    </ul>
+  </header>
+
+  <ul class="games">
+    <li class="game" data-game="methodical">
+      <span class="label stage">Plan the study</span>
+      <div class="fan" role="img" aria-label="Four Methodical cards: the card back, the question 'Rare cancer, common spray', its best answer the case–control study, and that method's typical threat, recall bias.">
+        <img src="assets/cards/methodical-back.png" alt="" width="520" height="727">
+        <img src="assets/cards/methodical-MTH-Q07.png" alt="" width="520" height="727">
+        <img src="assets/cards/methodical-MTH-D08.png" alt="" width="520" height="727">
+        <img src="assets/cards/methodical-MTH-B05.png" alt="" width="520" height="727">
+      </div>
+      <h2>Methodical</h2>
+      <p>Read a research problem, pick the method that can actually answer it, then defend it when a reviewer attacks it with a bias.</p>
+      <p class="practise">You practise: study designs, their threats to validity and the safeguards against them.</p>
+      <ul class="meta"><li>218 cards</li><li>Solo in the app, or 2–30 at the table</li><li>English, Français, Nederlands, Deutsch, العربية</li></ul>
+      <div class="actions">
+        <a class="play" href="https://ua-smartlab.github.io/methodical-card-game/app/">Play Methodical <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <span class="more">
+          <a href="https://github.com/UA-SMARTLab/methodical-card-game/blob/main/RULES.md">Rules</a>
+          <a href="https://ua-smartlab.github.io/methodical-card-game/print/cards.html">Print and play</a>
+          <a href="https://github.com/UA-SMARTLab/methodical-card-game">Source</a>
+        </span>
+      </div>
+    </li>
+
+    <li class="game" data-game="major-revisions">
+      <span class="label stage">Review the manuscript</span>
+      <div class="fan" role="img" aria-label="Four Major Revisions cards: the card back, the study 'Burnout in the doctorate', the request card 'Missing data', and the manuscript's flawed Analysis card.">
+        <img src="assets/cards/major-revisions-back.png" alt="" width="520" height="727">
+        <img src="assets/cards/major-revisions-MR-P04.png" alt="" width="520" height="727">
+        <img src="assets/cards/major-revisions-MR-R17.png" alt="" width="520" height="727">
+        <img src="assets/cards/major-revisions-MR-4A-F.png" alt="" width="520" height="727">
+      </div>
+      <h2>Major Revisions</h2>
+      <p>A manuscript arrives with a flaw planted in it. Send the right reviewer requests, find the flaw before your rounds run out, and give the editor's verdict.</p>
+      <p class="practise">You practise: reporting guidelines (CONSORT, STROBE, PRISMA, STARD, COREQ, ARRIVE) and the flaws they catch.</p>
+      <ul class="meta"><li>117 cards</li><li>Solo in the app, or 3–6 at the table</li><li>English</li></ul>
+      <div class="actions">
+        <a class="play" href="https://ua-smartlab.github.io/major-revisions-card-game/app/">Play Major Revisions <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <span class="more">
+          <a href="https://github.com/UA-SMARTLab/major-revisions-card-game/blob/main/RULES.md">Rules</a>
+          <a href="https://ua-smartlab.github.io/major-revisions-card-game/print/cards.html">Print and play</a>
+          <a href="https://github.com/UA-SMARTLab/major-revisions-card-game">Source</a>
+        </span>
+      </div>
+    </li>
+
+    <li class="game" data-game="red-flag">
+      <span class="label stage">Judge the claim</span>
+      <div class="fan" role="img" aria-label="Four Red Flag cards: the card back, the claim 'Choose hospital A', the flag 'Simpson's paradox', and the check 'Split by subgroup'.">
+        <img src="assets/cards/red-flag-back.png" alt="" width="520" height="727">
+        <img src="assets/cards/red-flag-RF-C17.png" alt="" width="520" height="727">
+        <img src="assets/cards/red-flag-RF-F13.png" alt="" width="520" height="727">
+        <img src="assets/cards/red-flag-RF-K06.png" alt="" width="520" height="727">
+      </div>
+      <h2>Red Flag</h2>
+      <p>Read a research claim, then flag its reasoning error, or call it sound. Every flag comes with a real historical case.</p>
+      <p class="practise">You practise: confounding, sampling, statistical and publication errors, and the checks that expose them.</p>
+      <ul class="meta"><li>115 cards</li><li>Solo in the app, or 2–6 at the table</li><li>English</li></ul>
+      <div class="actions">
+        <a class="play" href="https://ua-smartlab.github.io/red-flag-card-game/app/">Play Red Flag <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <span class="more">
+          <a href="https://github.com/UA-SMARTLab/red-flag-card-game/blob/main/RULES.md">Rules</a>
+          <a href="https://ua-smartlab.github.io/red-flag-card-game/print/cards.html">Print and play</a>
+          <a href="https://github.com/UA-SMARTLab/red-flag-card-game">Source</a>
+        </span>
+      </div>
+    </li>
+  </ul>
+
+  <section class="how" aria-label="How the kit works">
+    <div><h3>One look across the kit</h3><p>All games share the same poker-size card frame, fonts and app. Each has its own colour and card back, so a stray card sorts straight back into its box.</p></div>
+    <div><h3>Answers you can argue with</h3><p>Answer keys have three tiers: best, defensible and trap, each trap with the reason it fails. An unlisted answer can be appealed to the table, because methodologists disagree.</p></div>
+    <div><h3>Sources, not opinions</h3><p>Every concept card names the paper or standard that defines it, and the app opens it with one tap. Real cases are real; invented examples are labelled as such.</p></div>
+  </section>
+
+  <footer>
+    <span>© 2026 Abdulhamid Baghdadi, <a href="https://github.com/UA-SMARTLab">SMART-Lab</a>, University of Antwerp.</span>
+    <span>Free for non-commercial use: teaching, study, research and play. Cards, art and rules under
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>; software under the
+      <a href="https://polyformproject.org/licenses/noncommercial/1.0.0/">PolyForm Noncommercial License 1.0.0</a>.
+      Selling the games or making merchandise from them needs written permission.</span>
+  </footer>
+</div>
+</body>
+</html>
