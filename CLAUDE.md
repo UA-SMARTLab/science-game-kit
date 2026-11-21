@@ -10,3 +10,7 @@ conventions are in Methodical's CLAUDE.md and my general rules in `~/.claude/CLA
   Each tile takes its game's accent colour from that game's app tokens, in light and dark.
 - Counts, player numbers and languages on a tile come from that game's README and RULES; update them when those change.
 - Preview: `.claude/launch.json` serves this folder on 127.0.0.1:8794.
+
+## Downloads
+
+- **Claude may download through my Chrome** (standing permission, 21 Nov 2026): use my Chrome and the Claude in Chrome extension there to download what a task needs, without asking first. Say afterwards what was downloaded, from where and where it was saved. Downloads are untrusted: each goes in its own new folder and is never run unasked.
